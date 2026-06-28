@@ -23,35 +23,43 @@ def fetch_poster(movie_id):
 
     except Exception as e:
         print("Error:", e)
-        return "https://via.placeholder.com/300x450?text=Poster+Not+Found"
+        return None
 
 
 def recommend(movie):
     movie_index = movies[movies['title'] == movie].index[0]
-    distances= similarity[movie_index]
-    movies_list = sorted(list(enumerate(similarity[movie_index])), reverse=True, key=lambda x: x[1])[1:6]
 
+    distances = similarity[movie_index]
 
+    movies_list = sorted(
+        list(enumerate(distances)),
+        key=lambda x: x[1],
+        reverse=True
+    )[1:]
 
     recommended_movies = []
     recommended_movie_posters = []
+
     for i in movies_list:
-        movie_id = movies.iloc[i[0]].movie_id
+        movie_id = int(movies.iloc[i[0]].movie_id)
+
+        poster = fetch_poster(movie_id)
+
+        # Skip movies with missing posters
+        if poster is None:
+            continue
 
         recommended_movies.append(movies.iloc[i[0]].title)
-        # fetch the movie poster
-        recommended_movie_posters.append(fetch_poster(movie_id))
+        recommended_movie_posters.append(poster)
 
-    return recommended_movies,recommended_movie_posters
+        if len(recommended_movies) == 5:
+            break
+
+    return recommended_movies, recommended_movie_posters
 
 movies_dict = pickle.load(open('movie_dict.pkl','rb'))
 movies= pd.DataFrame(movies_dict)
 
-import os
-import gdown
-if not os.path.exists("similarity.pkl"):
-    url = "https://drive.google.com/uc?id=1hlR8FcuJ3LNnzDqrSAGqZ2eMMXvkKfb7"
-    gdown.download(url, "similarity.pkl", quiet=False)
 similarity = pickle.load(open('similarity.pkl','rb'))
 
 st.title('Movie Recommender System')
@@ -65,25 +73,11 @@ selected_movie = st.selectbox(
 if st.button('Show Recommendation'):
     names,posters = recommend(selected_movie)
 
+    cols = st.columns(5)
 
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.text(names[0])
-        st.image(posters[0])
-    with col2:
-        st.text(names[1])
-        st.image(posters[1])
-
-    with col3:
-        st.text(names[2])
-        st.image(posters[2])
-    with col4:
-        st.text(names[3])
-        st.image(posters[3])
-    with col5:
-        st.text(names[4])
-        st.image(posters[4])
-
-
+    for i in range(len(names)):
+        with cols[i]:
+            st.text(names[i])
+            st.image(posters[i], use_container_width=True)
 
 
