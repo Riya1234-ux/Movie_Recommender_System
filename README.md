@@ -109,8 +109,3 @@ streamlit run app.py
 * Genre, language, and rating-based filtering
 * Cloud deployment with automated model artifact retrieval
 * Recommendation explanation module
-
-
----
-
-⭐ If you found this project interesting, feel free to **star the repository**!
